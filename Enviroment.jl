@@ -32,8 +32,22 @@ function optimization(wantToBuy)
     return
 end
 
-
-optimization(wantToBuy)
-stringPrice = string(price)
-println("price " + stringPrice)
+function priceChange(price)
+    n = Random.rand(Float16)
+    x = Random.rand((0, 1))
+    news = n + x
+    if news < 0.3
+        news = 0.3
+        price = price * news
+        println(news)
+        return price
+    end
+    println(news)
+    global price = price * news
+    return price
+end
+#optimization(wantToBuy)
+#stringPrice = string(price)
+priceChange(price)
+println("price ", price)
 
