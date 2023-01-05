@@ -3,7 +3,7 @@ using Random
 
 mutable struct TradingAgent <: AbstractAgent
   id::Int # id of the agent
-  balance::Int # how much money the agent has
+  balance::Float64 # how much money the agent has
   sell_buy::Float64 # whether the agent will sell, buy or hold
   volatilityScore::Float64
 end
@@ -19,6 +19,7 @@ function (ms::MarketScheduler)(model::ABM)
   println(model)
   ms.news = Random.rand(Float64)
 
+  return allids(model)
 end
 
 function initialize(; numagents=2, price=100, totalCoinAmount=10000)
@@ -27,7 +28,7 @@ function initialize(; numagents=2, price=100, totalCoinAmount=10000)
     :totalCoinAmount => totalCoinAmount, # how many coins exist
   )
 
-  ms = MarketScheduler(0.5)
+  ms = MarketScheduler(0, 0.5)
 
   # the space is nothing by default
   model = ABM(
@@ -54,13 +55,13 @@ wantToBuy = 9
 amount = 10
 price = 100
 function trader_step!(agent, model)
+  println("running trader_step")
   # detemine sell_buy
-  println(agent.sell_buy)
   usablebalance = agent.balance / 5
-  agent.balance = agent.balance - usablebalance
-  if (model.news < 0.33) # negative news
+  agent.balance = agent.balance - 100.0
+  if (model.scheduler.news < 0.33) # negative news
     agent.sell_buy = agent.sell_buy / (1.5 * agent.volatilityScore)
-  elseif (model.news > 0.66) # positive news
+  elseif (model.scheduler.news > 0.66) # positive news
     agent.sell_buy = agent.sell_buy * (1.5 * agent.volatilityScore)
   end
 
