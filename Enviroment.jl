@@ -28,7 +28,7 @@ function initialize(; numagents=2, price=100, totalCoinAmount=10000)
     :totalCoinAmount => totalCoinAmount, # how many coins exist
   )
 
-  ms = MarketScheduler(0, 0.5)
+  ms = MarketScheduler(0.5)
 
   # the space is nothing by default
   model = ABM(
@@ -48,12 +48,30 @@ function initialize(; numagents=2, price=100, totalCoinAmount=10000)
   return model
 end
 
+function buy(model, usablebalance)
+  amount = 0
+  while usablebalance % amount == 0 && amount < 10
+    amount += 1
+  end
+  if amount < maxCoinsPerTrade
+    priceIncreasePercentage = amount / 10
+    global model.price += model.price * priceIncreasePercentage
+
+    return
+
+  else
+    println("too many damn coins")
+    return
+
+  end
+  return
+end
+
 
 tradesPerTick = 1
 maxCoinsPerTrade = 10
 wantToBuy = 9
 amount = 10
-price = 100
 function trader_step!(agent, model)
   println("running trader_step")
   # detemine sell_buy
@@ -79,24 +97,6 @@ step!(model, trader_step!, 2)
 
 println(random_agent(model))
 
-function buy(model, usablebalance)
-  amount = 0
-  while usablebalance % amount == 0 && amount < 10
-    amount += 1
-  end
-  if amount < maxCoinsPerTrade
-    priceIncreasePercentage = amount / 10
-    global model.properties.price += model.properties.price * priceIncreasePercentage
-
-    return
-
-  else
-    println("too many damn coins")
-    return
-
-  end
-  return
-end
 
 
 #function optimization(wantToBuy)
