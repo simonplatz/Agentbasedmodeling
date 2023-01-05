@@ -1,0 +1,7 @@
+using Random  
+  
+  
+
+n = Random.rand(Float16)
+x = Random.rand((0,1))
+print(n+x)
