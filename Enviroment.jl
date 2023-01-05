@@ -62,7 +62,6 @@ function trader_step!(agent, model)
   end
 
   if (agent.sell_buy < 0.33) ## sell
-    model.
   else if (agent.sell_buy > 0.66) ## buy
 
   end
