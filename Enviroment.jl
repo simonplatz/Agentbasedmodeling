@@ -54,22 +54,22 @@ function initialize(; numagents=2, price=100.0, totalCoinAmount=10000, coinLeft=
 end
 
 
-function buy(model, usablebalance, agent)
+function buy(model, agent)
 
   amount = 0
-  while (usablebalance - (amount * model.price)) > 0 && amount < 10
+  while (agent.balance - (amount * model.price)) > 0 && amount < 10
     amount += 1
   end
 
   if amount <= maxCoinsPerTrade && agent.balance - model.price > 0
     model.price += 1
     priceIncreasePercentage = amount / 100
-    usablebalance -= amount * model.price
+    agent.balance -= amount * model.price
     println("Price before ", model.price)
     model.price += model.price * priceIncreasePercentage
     agent.coinsOwned += amount
     model.coinLeft -= amount
-    agent.balance += usablebalance
+
 
     println("Price after ", model.price)
     return
@@ -115,13 +115,7 @@ function trader_step!(agent, model)
 
   agent.sell_buy = 1
 
-  if agent.balance - model.price > 0
-    usablebalance = agent.balance / 5
-    agent.balance = agent.balance - usablebalance
-  else
-    usablebalance = agent.balance
-    agent.balance = agent.balance - usablebalance
-  end
+
 
   if (model.scheduler.news < 0.33) # negative news
     agent.sell_buy = agent.sell_buy / (1.5 * agent.volatilityScore)
@@ -153,7 +147,7 @@ function trader_step!(agent, model)
   if (agent.sell_buy < 0.33) ## sellq
     sell(model, agent)
   elseif (agent.sell_buy > 0.66) ## buy
-    buy(model, usablebalance, agent)
+    buy(model, agent)
 
   end
   println(Agents.allagents(model))
