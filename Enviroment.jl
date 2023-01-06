@@ -24,7 +24,7 @@ function (ms::MarketScheduler)(model::ABM)
   return allids(model)
 end
 
-function initialize(; numagents=2, price=100.0, totalCoinAmount=10000, coinLeft=10000)
+function initialize(; numagents=40, price=10.0, totalCoinAmount=10000, coinLeft=10000)
   properties = Dict(
     :price => price, # initial price
     :totalCoinAmount => totalCoinAmount, # how many coins exist
@@ -39,13 +39,14 @@ function initialize(; numagents=2, price=100.0, totalCoinAmount=10000, coinLeft=
     properties=properties, scheduler=ms
   )
 
-  balance = 10000 # start all with equal balance
+  balance = 100000 # start all with equal balance
   sell_buy = 0.5 # the initial sell/buy is neutral
-  volatilityScore = Random.rand(Float64) * 2 # randomly assign how volatile the trader should be 
+
   coinsOwned = 0
   startBalance = balance
 
   for n in 1:numagents
+    volatilityScore = Random.rand(Float64) * 2   # randomly assign how volatile the trader should be 
     agent = TradingAgent(n, balance, sell_buy, volatilityScore, coinsOwned, startBalance)
     add_agent!(agent, model)
   end
@@ -57,16 +58,30 @@ end
 function buy(model, agent)
 
   amount = 0
-  while (agent.balance - (amount * model.price)) > 0 && amount < 10
+
+  while (agent.balance - ((amount + 1) * model.price)) > 0 && amount < 100 && agent.balance > (amount + 1) * model.price
+
     amount += 1
+    if agent.balance < amount * model.price
+      amount -= 1
+    end
   end
 
-  if amount <= maxCoinsPerTrade && agent.balance - model.price > 0
+  if amount <= 100 && agent.balance - model.price * amount > 0 && amount > 0
     model.price += 1
-    priceIncreasePercentage = amount / 100
+    # priceIncreasePercentage = amount / 100
     agent.balance -= amount * model.price
     println("Price before ", model.price)
-    model.price += model.price * priceIncreasePercentage
+    if model.price < 100
+      model.price = model.price + (amount * 2)
+    elseif model.price < 200
+      model.price = model.price + (amount * 3)
+    elseif model.price < 300
+      model.price = model.price + (amount * 4)
+    else
+      model.price = model.price + (amount * 5)
+    end
+    # model.price += model.price * priceIncreasePercentage
     agent.coinsOwned += amount
     model.coinLeft -= amount
 
@@ -75,7 +90,8 @@ function buy(model, agent)
     return
 
   else
-    println("too many damn coins")
+    println("cant buy", amount)
+    println(model.price)
     return
 
   end
@@ -85,20 +101,30 @@ end
 function sell(model, agent)
   coinsSold = 0
   println("jeg sælger")
+  println("sell price ", model.price)
   if model.price < 500 && agent.balance > 100
     coinsSold = agent.coinsOwned * 0.10
     agent.coinsOwned = agent.coinsOwned - coinsSold
-    agent.balance = coinsSold * model.price
-    model.price = model.price - (coinsSold * 5)
+    agent.balance += coinsSold * model.price
+    if model.price < 100
+      model.price = model.price - (coinsSold * 2)
+    elseif model.price < 200
+      model.price = model.price - (coinsSold * 3)
+    elseif model.price < 300
+      model.price = model.price - (coinsSold * 4)
+    else
+      model.price = model.price - (coinsSold * 5)
+    end
+
   elseif model.price > 500 && agent.balance > 100
     coinsSold = agent.coinsOwned / 2
     agent.coinsOwned = agent.coinsOwned - coinsSold
-    agent.balance = coinsSold * model.price
+    agent.balance += coinsSold * model.price
     model.price = model.price - (coinsSold * 5)
   elseif agent.balance <= 100
     coinsSold = agent.coinsOwned * 0.9
     agent.coinsOwned = agent.coinsOwned - coinsSold
-    agent.balance = coinsSold * model.price
+    agent.balance += coinsSold * model.price
     model.price = model.price - (coinsSold * 5)
   end
 
@@ -113,8 +139,11 @@ function trader_step!(agent, model)
   #println("running trader_step")
   # detemine sell_buy
 
-  agent.sell_buy = 1
+  agent.sell_buy = 0.5
 
+  if model.price <= 0
+    model.price = 10
+  end
 
 
   if (model.scheduler.news < 0.33) # negative news
@@ -137,25 +166,36 @@ function trader_step!(agent, model)
   if model.price > 1500
     agent.sell_buy = agent.sell_buy / (model.price / 1000)
   else
-    agent.sell_buy = agent.sell_buy * 1.5
+    agent.sell_buy = agent.sell_buy * 2
   end
 
   if (agent.coinsOwned == 0)
     agent.sell_buy = 1
   end
-
-  if (agent.sell_buy < 0.33) ## sellq
-    sell(model, agent)
-  elseif (agent.sell_buy > 0.66) ## buy
-    buy(model, agent)
-
+  if agent.coinsOwned < 1 && agent.balance > model.price
+    agent.sell_buy = 1
   end
-  println(Agents.allagents(model))
+
+
+
+  println(agent)
+  if (agent.sell_buy < 0.43 && agent.coinsOwned >= 1) ## sellq
+    println("agent ", agent.id, " selling")
+    sell(model, agent)
+  elseif (agent.sell_buy > 0.56) ## buy
+    println("agent ", agent.id, " buying")
+    buy(model, agent)
+  elseif agent.sell_buy > 0.43 && agent.sell_buy < 056
+    println("agent ", agent.id, " doing nothing")
+  else
+    println("Agent ", agent.id, " Cant do anything")
+  end
+  println(agent)
 end
 
 model = initialize()
 
-step!(model, trader_step!, 100)
+step!(model, trader_step!, 1000)
 
 
 
