@@ -1,5 +1,6 @@
 using Agents
 using Random
+using DelimitedFiles
 
 mutable struct TradingAgent <: AbstractAgent
   id::Int # id of the agent
@@ -135,6 +136,7 @@ tradesPerTick = 1
 maxCoinsPerTrade = 10
 wantToBuy = 9
 amount = 10
+array = []
 function trader_step!(agent, model)
   #println("running trader_step")
   # detemine sell_buy
@@ -191,14 +193,17 @@ function trader_step!(agent, model)
     println("Agent ", agent.id, " Cant do anything")
   end
   println(agent)
+  push!(array, model.price)
 end
 
 model = initialize()
 
-step!(model, trader_step!, 1000)
+step!(model, trader_step!, 10)
+println(array)
 
 
 
+writedlm("FileName.csv", array, ',')
 
 
 #function optimization(wantToBuy)
