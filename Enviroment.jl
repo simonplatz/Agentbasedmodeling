@@ -203,7 +203,7 @@ println(array)
 
 
 
-writedlm("FileName.csv", array, ',')
+writedlm("FileName3.csv", array)
 
 
 #function optimization(wantToBuy)
