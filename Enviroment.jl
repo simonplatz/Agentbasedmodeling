@@ -193,17 +193,19 @@ function trader_step!(agent, model)
     println("Agent ", agent.id, " Cant do anything")
   end
   println(agent)
-  push!(array, model.price)
+  small_price = model.price
+
+  push!(array, round(Int, small_price))
 end
 
 model = initialize()
 
-step!(model, trader_step!, 10)
+step!(model, trader_step!, 1000)
 println(array)
 
 
 
-writedlm("FileName3.csv", array)
+writedlm("prices.csv", array, ',')
 
 
 #function optimization(wantToBuy)
