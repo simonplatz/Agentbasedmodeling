@@ -137,6 +137,9 @@ maxCoinsPerTrade = 10
 wantToBuy = 9
 amount = 10
 array = []
+
+agentBalanceArray = []
+agentCoinArray = []
 function trader_step!(agent, model)
   #println("running trader_step")
   # detemine sell_buy
@@ -196,18 +199,25 @@ function trader_step!(agent, model)
   small_price = model.price
 
   push!(array, round(Int, small_price))
+
+  if agent.id == 15
+    abalance = agent.balance
+    aCoin = agent.coinsOwned
+    push!(agentBalanceArray, round(Int, abalance))
+    push!(agentCoinArray, round(Int, aCoin))
+  end
 end
 
 model = initialize()
 
-step!(model, trader_step!, 1000)
+step!(model, trader_step!, 100)
 println(array)
 
 
 
-writedlm("prices.csv", array, ',')
-
-
+writedlm("prices2.csv", array, ',')
+writedlm("coins.csv", agentCoinArray, ',')
+writedlm("balance.csv", agentBalanceArray, ',')
 #function optimization(wantToBuy)
 #    if wantToBuy >= 10
 #        buy(amount, price)
